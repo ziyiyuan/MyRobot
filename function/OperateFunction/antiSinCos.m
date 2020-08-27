@@ -1,5 +1,5 @@
 function  angle = antiSinCos(sA, cA)
-% 值域 (-pi,pi] ,返回 atan2, use in Ik
+% 值域 (-pi,pi] ,返回 atan2, used in Ik
     eps = 1e-5;
     r = sqrt(sA*sA+cA*cA);
     sA  = sA / r;

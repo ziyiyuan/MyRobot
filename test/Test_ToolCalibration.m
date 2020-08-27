@@ -1,5 +1,6 @@
 clc; clear all; close all
 format short
+global Robot 
 
 %% Œª÷√
 q_init = [-0.000172;-7.291852;-75.694718;21.596727;-89.999982;-0.000458]*pi/180;
