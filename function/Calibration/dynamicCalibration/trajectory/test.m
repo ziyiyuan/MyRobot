@@ -22,3 +22,8 @@ ff = resultFunction(qq, identify_model);
 valid = validationTrajectory(qq, identify_model)
 
 
+% qqInitial = cal_traj_initial_paraCoeff(Robot,Traj,sampleRate)
+% motionPara = cal_motionPara_from_fourier_series(Robot,Traj, qqInitial, sampleRate)
+% 
+% f = opitimal_objective_function_traj(qqInitial, identifyModel, Robot, Traj)
+% [c,ceq] = optimal_constrain_conditions(Robot, motionPara, identificationModel) %% Ô¼ÊøÌõ¼þ

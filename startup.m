@@ -2,10 +2,9 @@ clc; clear all; close all
 format short
 addpath( genpath( '..\MyRobot' ) );
 %% initialize
-global Robot 
+global robotType
 robotType = 'I5';
-ParaCAD(robotType)
 %%
-% aubo_i = toolboxModel();
+
 
 

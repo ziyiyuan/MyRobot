@@ -1,43 +1,33 @@
-clear;close all;clc;
+% 运动学标定移入算法库
+clc
+clear all
+close all
+%% initiallize
+robotType = 'I5';
+Robot = get_cad_model_para(robotType);
+%%
+caliMethod = 'leica';
+% caliMethod = 'dynalog';
+
 caliBeta = 1;
 useEstPara = 0;
 
-leicaData=0; % 1/0<=>leica/dynalog
-leicaTestEna=0;
-
-dynalogTestEna=1;
-
-robotI5=1; % 1/0<=>i5/i7
-%-----------------------------------------------------
-% nominal data from Leica Report before calibration
-%-----------------------------------------------------
-if robotI5==1
-    a2=0.408;a3=0.376;d1=0.122;d2=0.1215;d4=0;d5=0.1025;d6=0.094;
-else
-    a2 = 0.552;a3 = 0.495;d1 = 0.1632;d2 = 0.178;d5 = 0.1025;d6 = 0.094;d4 = 0;
-    leicaData=0;
-    leicaTestEna=0;
-end
-if leicaData==1
-    nom.joints=load('Leica\CAL.txt')*pi/180; % six joint angles
-    %     nom.toolPosInFlange=[-3.0974 12.2589 26.4622]'/1000; % parameters with error.
-    %     nom.baseInLeica.pos=[3783.8695 1888.4613 63.2584]'/1000; % parameters with error.
-    %     nom.baseInLeica.rpy=[-63.2966 0.5894 0.2756]'*pi/180; % parameters with error.ZYX order
-    nom.baseInLeica.pos = [3.783869 1.88846 0.06325]';
-    nom.baseInLeica.rpy = [-1.1047 0.0103 0.0048]';  %rpy rz*ry*rx
-    nom.toolPosInFlange = [-0.0031 0.0123 0.0265]';
+%% load data
+if strcmp(caliMethod,'leica')
+    nom.joints = load('Data\Leica0101\CAL.txt')*pi/180; % six joint angles
+    nom.mesuredData = load('Data\Leica0101\mesurements.txt')/1000;
     
+    nom.baseInLeica.pos = [3783.8695 1888.4613 63.2584]'/1000; % parameters with error.
+    nom.baseInLeica.rpy = [-63.2966 0.5894 0.2756]'*pi/180; % parameters with error.ZYX order,%rpy rz*ry*rx
+    nom.toolPosInFlange = [-3.0974 12.2589 26.4622]'/1000; % parameters with error.
     
-    nom.baseInLeica.rot=rotZ(nom.baseInLeica.rpy(1))*rotY(nom.baseInLeica.rpy(2))*rotX(nom.baseInLeica.rpy(3));
-    nom.mesuredData=load('Leica\mesurements.txt')/1000;
+    nom.baseInLeica.rot = RotZ(nom.baseInLeica.rpy(1))*RotY(nom.baseInLeica.rpy(2))*RotX(nom.baseInLeica.rpy(3));
 else
-    if robotI5==1
-        %         filePath='dynalog\i5DynacalTestData\19071093\DC\19071093\';
-        filePath='dynalog\i5DynacalTestData\19071101\DC\19071101\';
-        %         filePath='dynalog\i5DynacalTestData\19071102\DC\19071102\';
-    else
-        filePath='dynalog\i7DynacalTestData\19081001\calidata\';
-    end
+    
+    %         filePath='dynalog\i5DynacalTestData\19071093\DC\19071093\';
+    filePath='dynalog\i5DynacalTestData\19071101\DC\19071101\';
+    %         filePath='dynalog\i5DynacalTestData\19071102\DC\19071102\';
+    
     nom.joints=load(strcat(filePath,'point60.txt'))*pi/180; % six joint angles
     nom.joints=nom.joints(:,2:end);
     fid=fopen(strcat(filePath,'DynaCal1.msr'));
@@ -50,35 +40,35 @@ else
     
     nom.toolPosInFlange = [ 0.0001   -0.1035    0.0956]';
     nom.dynalogInBase.pos=[0.0407   -1.1701   -0.0845]';
-
 end
-nom.size=size(nom.joints,1);
-nom.dhArr=getDhPara(a2,a3,d1,d2,d4,d5,d6);
+nom.joint_num = size(nom.joints,1);
+nom.DH = Robot.DH;
+nom.DOF = Robot.DOF;
 %-----------------------------------------------------
 % leica test
 %-----------------------------------------------------
-if leicaTestEna
-    dh_para_mask=ones(5,6); % alpha A D theta beta
-%     dh_para_mask = [ 0     1     1     1     0     0
-%                      0     0     0     0     0     0
-%                      0     0     0     0     0     0
-%                      0     0     0     0     0     0
-%                      0     0     0     0     0     0];
+if (strcmp(caliMethod,'leica'))
+    dh_para_mask = ones(6,5); % alpha a d theta beta
+    %     dh_para_mask = [ 0     1     1     1     0     0
+    %                      0     0     0     0     0     0
+    %                      0     0     0     0     0     0
+    %                      0     0     0     0     0     0
+    %                      0     0     0     0     0     0];
     if(caliBeta == 0)
-        dh_para_mask(5,:)=0; % set by API
+        dh_para_mask(5,:) = 0; % set by API
     end
     %-----------------------------------------------------
     % rough estimation of 9 envirenment parameters
     %-----------------------------------------------------
-    [xyz, rpy, pt]=FuncRoughCalibPositionMeas(nom);
-    xyz_rpy_pt_rough=[xyz', rpy', pt'];
+    [xyz, rpy, pt] = FuncRoughCalibPositionMeas(nom);
+    xyz_rpy_pt_rough = [xyz', rpy', pt'];
     Leica=[nom.baseInLeica.pos' nom.baseInLeica.rpy' nom.toolPosInFlange'];
     % using rough estimation
     if(useEstPara)
-        nom.baseInLeica.pos=xyz;
-        nom.baseInLeica.rpy=rpy;
-        nom.toolPosInFlange=pt;
-        nom.baseInLeica.rot=rotZ(nom.baseInLeica.rpy(1))*rotY(nom.baseInLeica.rpy(2))*rotX(nom.baseInLeica.rpy(3));
+        nom.baseInLeica.pos = xyz;
+        nom.baseInLeica.rpy = rpy;
+        nom.toolPosInFlange = pt;
+        nom.baseInLeica.rot = RotZ(nom.baseInLeica.rpy(1))*RotY(nom.baseInLeica.rpy(2))*RotX(nom.baseInLeica.rpy(3));
     end
     %-----------------------------------------------------
     % accurate estimation of 9 envirenment parameters
@@ -88,13 +78,13 @@ end
 %-----------------------------------------------------
 % dynalog test with dammy data from Leica test.
 %-----------------------------------------------------
-if dynalogTestEna
-    dh_para_mask=ones(5,6); % alpha A D theta beta
-%     dh_para_mask = [ 0     1     1     1     0     0
-%                      0     0     0     0     0     0
-%                      0     0     0     0     0     0
-%                      0    0   0     0     0     0
-%                      0     0     0    0     0     0];
+if 0
+    dh_para_mask=ones(6,5); % alpha A D theta beta
+    %     dh_para_mask = [ 0     1     1     1     0     0
+    %                      0     0     0     0     0     0
+    %                      0     0     0     0     0     0
+    %                      0    0   0     0     0     0
+    %                      0     0     0    0     0     0];
     if(caliBeta == 0)
         dh_para_mask(5,:)=0; % set by API
     end
@@ -109,7 +99,7 @@ if dynalogTestEna
     
     [xyz,pt]=FuncRoughCalibDistanceMeas(nom);
     xyz_pt_rough=[xyz;pt]'
-
+    
     % using rough estimation
     if(useEstPara)
         nom.toolPosInFlange=pt;
@@ -125,4 +115,4 @@ if dynalogTestEna
     
     [xyz,pt,dhArr]=FuncDhCalibDistanceMeas(nom, dh_para_mask);
     xyz_pt_dynalog=[xyz;pt]'
-end
+    end
