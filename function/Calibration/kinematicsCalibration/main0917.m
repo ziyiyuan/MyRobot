@@ -1,4 +1,4 @@
-% 运动学标定移入算法库
+% 20200902 常州基于Leica 激光跟踪仪 运动学标定的主程序；
 clc
 clear all
 close all
@@ -10,14 +10,16 @@ caliMethod = 'leica';
 caliBeta = 1;
 useEstPara   = 0;
 
+addpath( genpath( 'C:\Users\Sherry\Desktop\MyRobot\dataLib\kinematicsCalibrationData' ) )
+
 filename = 'Leica0922';
 % filename = 'Leica0921_1';
 % filename = 'Leica0918';
 % filename = 'Leica0101';
 
 %% load data
-nom.joints = load(['Data\',filename,'\CAL.txt']); % six joint angles
-nom.mesuredData = load(['Data\',filename,'\mesurements.txt'])/1000;
+nom.joints = load([filename,'\CAL.txt']); % six joint angles
+nom.mesuredData = load([filename,'\mesurements.txt'])/1000;
 if strcmp(filename,'Leica0922')
     cBase = [359.962	1010.3215	112.9991	0.5985	0.1212	-4.7401];
     cTool = [-13.1097	-12.7803	39.1872 	90	0	-90.0002];

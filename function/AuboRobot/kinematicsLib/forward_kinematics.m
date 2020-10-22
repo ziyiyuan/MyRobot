@@ -15,7 +15,6 @@ function T = forward_kinematics(q, DHMatrix, i)
 if nargin > 3
     error('输入变量过多！');
 end
-
 T0_1 = homogeneous_transfer(DHMatrix(1,1),DHMatrix(1,2),DHMatrix(1,3),DHMatrix(1,4) + q(1));
 T1_2 = homogeneous_transfer(DHMatrix(2,1),DHMatrix(2,2),DHMatrix(2,3),DHMatrix(2,4) + q(2));
 T2_3 = homogeneous_transfer(DHMatrix(3,1),DHMatrix(3,2),DHMatrix(3,3),DHMatrix(3,4) + q(3));

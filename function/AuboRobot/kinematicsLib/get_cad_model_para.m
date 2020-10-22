@@ -1,4 +1,4 @@
-function Robot = get_cad_model_para(robotType)
+function Robot = get_cad_model_para(robotType,toolPara)
 % get_cad_model_para 得到机械臂CAD模型的参数
 % 输入参数：
 %   robotType: 机械臂型号：‘I3’,'I5'...
@@ -7,14 +7,19 @@ function Robot = get_cad_model_para(robotType)
 % 调用说明：
 %   Robot = get_cad_model_para('I3') :输出 I3 的模型参数；
 %   Robot = get_cad_model_para() :输出 I5 的模型参数；
-
+% toolPara : 10*1;;M MS J in joint
 % 版本号V1.0，编写于2020/8/27，修改于2020/8/27，作者：ziyi
 
-if nargin > 1
+if nargin > 2
     error('输入变量过多！');
+elseif nargin == 1
+    toolPara = zeros(10,1); % J;MS;M
 elseif nargin == 0
     robotType = 'I5'; % 默认情况下为I5
 end
+    tool.M = toolPara(10);
+    tool.c = toolPara(7:9);
+    tool.J =  inertiaMatrix(toolPara(1:6));
 
 gx = 0; gy = 0; gz = -9.81;% default
 
@@ -40,7 +45,7 @@ if strcmp(robotType,'I3')
     TC1 = 96; TC2 = 96; TC3 = 110; TC4 = 135; TC5 = 135; TC6 = 135;
 elseif strcmp(robotType,'I5')
     % COMMON
-    a2 = 0.408 ; a3 = 0.376; d1 = 0.0985; d2 = 0.1215;d5 = 0.1025; d6 = 0.094;
+    a2 = 0.408 ; a3 = 0.376; d1 = 0.122; d2 = 0.1215;d5 = 0.1025; d6 = 0.094;
     Mt = 0;
     tcx = 0.0;         tcy = 0;          tcz = 0;
     M1 = 5.05;      CX1 = 0;          CY1 = 0.0038;      CZ1 = 0.0006;
@@ -58,7 +63,9 @@ elseif strcmp(robotType,'I5')
     I{5} = [ 0.0023, 0,   0;   0,  0.0013, 0;  0, 0,  0.0022];
     I{6} = [ 0.0139395,  0,  0; 0,     0.0139882, 0; 0, 0,     0.0224092];
     IA1 = 0;    IA2 = 0;  IA3 = 1.1;    IA4 = 1.1;  IA5 = 1.1;    IA6 = 1.1;
-    TC1 = 110; TC2 = 110; TC3 = 110; TC4 = 135; TC5 = 135; TC6 = 135;
+    %     TC1 = 110; TC2 = 110; TC3 = 110; TC4 = 135; TC5 = 135; TC6 = 135;
+    %     before
+    TC1 = 92.5; TC2 = 92.27; TC3 = 91.68; TC4 = 102.3; TC5 = 103.7; TC6 = 102.6; %lizeyu
     
     %     a2 = 0.408 ; a3 = 0.376; d1 = 0.122;d2 = 0.1215;d5 = 0.1025; d6 = 0.094;
     %     Mt = 5;
@@ -78,9 +85,7 @@ elseif strcmp(robotType,'I5')
     %     I{5} = [ 0.0023, 0,   0;   0,  0.0013, 0;  0, 0,  0.0022];
     %     I{6} = [ 0.00139395,  0,  0; 0,     0.00139882, -0.00000211765; 0, -0.00000211765,     0.00224092];
     %     IA1 = 0;    IA2 = 0;  IA3 = 1.1;    IA4 = 1.1;  IA5 = 1.1;    IA6 = 1.1;
-    %     TC1 = 110; TC2 = 110; TC3 = 110; TC4 = 135; TC5 = 135; TC6 = 135;
-    
-    
+    %     TC1 = 110; TC2 = 110; TC3 = 110; TC4 = 135; TC5 = 135; TC6 = 135; 
 end
 
 IA = [IA1, IA2, IA3, IA4, IA5, IA6]';
@@ -96,10 +101,17 @@ c{4} = [CX4,CY4,CZ4]';
 c{5} = [CX5,CY5,CZ5]';
 c{6} = [CX6,CY6,CZ6]';
 
+%% 平行移轴定理计算加了工具之后新的绕质心转动的惯性张量；
 for i = 1:6
     MS{i} = M(i) * c{i};
     Ij{i} = I{i} - M(i)* skew(c{i})*skew(c{i}); %%  连杆坐标系的惯性张量
 end
+
+c{6} = (tool.M * tool.c + M(6) * c{6})/(tool.M + M(6));
+M(6) = M(6) + tool.M;
+MS{6} = M(6) * c{6};
+Ij{6} = Ij{6} + tool.J;
+I{6} = Ij{6} +  M(6)* skew(c{6})*skew(c{6});
 
 Robot.DOF = 6;
 

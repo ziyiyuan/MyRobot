@@ -1,6 +1,7 @@
 clc; clear all; close all
 format short
-addpath( genpath( '..\MyRobot' ) );
+% addpath( genpath( '..\MyRobot' ) );
+addpath( genpath( '.\function' ) )
 %% initialize
 global robotType
 robotType = 'I5';

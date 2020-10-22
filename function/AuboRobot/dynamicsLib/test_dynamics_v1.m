@@ -4,6 +4,8 @@
 clc
 clear all
 robotType = 'I5';
+identificationModel = 'Internal';
+toolPara = ones(10,1);
 Robot = get_cad_model_para(robotType);
 
 e = [[]];
@@ -15,47 +17,79 @@ motionPara.q = q;
 motionPara.qd = qd;
 motionPara.qdd = qdd;
 %%
+torque = get_joint_torque_base_miniPara(Robot,motionPara)
 % test ID_Newton_Euler // 返回每个关节的力和力矩，线性牛顿欧拉和迭代牛顿欧拉；
 % linear model and ordinary model
+[tau1,ft1] = ID_Newton_Euler(Robot, motionPara, 'linear');
+[index, MDP1] = get_mini_para_set_analytic(Robot, identificationModel)
+tau1
+% 加工具
+Robot = get_cad_model_para(robotType,toolPara);
+[tau2,ft2] = ID_Newton_Euler(Robot, motionPara, 'linear');
+[index, MDP2] = get_mini_para_set_analytic(Robot, identificationModel)
+
+
+[tau_tool,FTt] = calToolWrench(Robot, motionPara, toolPara)
+tau2 - tau1
+
+DH = Robot.DH;
+for i = 1:1:6
+    T{i} = homogeneous_transfer(DH(i,1),DH(i,2),DH(i,3),DH(i,4) + q(i));
+end
+Te = [[]];
+Te{6} = eye(4);
+for i = 6:-1:2
+    Te{i-1} = T{i}*Te{i};
+end
+for i= 1:1:6
+    T = Te{i};
+    RR = [T(1:3,1:3) zeros(3,3); skew(T(1:3,4))*T(1:3,1:3) T(1:3,1:3)]; %TAi
+    F(:,i) = RR * FTt;
+end
+tau_tool - F(6,:)'
+
+
 [tau1,ft] = ID_Newton_Euler(Robot, motionPara, 'linear');
-tau2 = ID_Newton_Euler(Robot, motionPara,'linear'); %
+tau2 = ID_Newton_Euler(Robot, motionPara,'linear');%
 [tau3,ft2] = ID_Newton_Euler(Robot, motionPara);
-e{1} = ft - ft2;
+e{1} = ft - ft2
+% 
+% %% test rotor inertia
+% [tau1,ft1] = ID_Newton_Euler_with_rotor_inertia(Robot,motionPara);
+% [tau2,ft2] = ID_rotor_inertia(Robot, motionPara);
+% [tau3,ft3] = ID_Newton_Euler(Robot, motionPara);
+% e{2} = tau1 - (tau2 + tau3);
+% 
+% 
+% 
+% %% identification model
+% pp = Robot.Para_cad;
+% 
+% % test External model // wrench in base 
+% wrench1 = cal_identification_matrix(Robot, motionPara,'External') * pp;
+% wrench = get_wrench_from_diff_identificationModel(Robot, motionPara, 'External');
+% e{3} = wrench - wrench1;
+% 
+% % test Internal model // torque in joint
+% tau1 = cal_identification_matrix(Robot, motionPara,'Internal') * pp;
+% tau = get_wrench_from_diff_identificationModel(Robot, motionPara, 'Internal');
+% e{4} = tau - tau1;
+% 
+% % test MiniPara // Internal model 解析解
+% HH =cal_identification_matrix(Robot, motionPara,'Internal');
+% [index, MDP] = get_mini_para_set_analytic(Robot,'Internal');
+% e{7} = HH(:,index) * MDP - tau;
+% 
+% % test MiniPara // External model 解析解 
+% HH =cal_identification_matrix(Robot, motionPara,'External');
+% [index, MDP] = get_mini_para_set_analytic(Robot,'External');
+% e{5} = HH(:,index) * MDP - wrench;
+% 
+% wrench1 = get_base_wrench_base_miniPara(Robot,motionPara);
+% e{6} = wrench1 - wrench;
 
-%% test rotor inertia
-[tau1,ft1] = ID_Newton_Euler_with_rotor_inertia(Robot,motionPara);
-[tau2,ft2] = ID_rotor_inertia(Robot, motionPara);
-[tau3,ft3] = ID_Newton_Euler(Robot, motionPara);
-e{2} = tau1 - (tau2 + tau3);
-
-
-
-%% identification model
-pp = Robot.Para_cad;
-
-% test External model // wrench in base 
-wrench1 = cal_identification_matrix(Robot, motionPara,'External') * pp;
-wrench = get_wrench_from_diff_identificationModel(Robot, motionPara, 'External');
-e{3} = wrench - wrench1;
-
-% test Internal model // torque in joint
-tau1 = cal_identification_matrix(Robot, motionPara,'Internal') * pp;
-tau = get_wrench_from_diff_identificationModel(Robot, motionPara, 'Internal');
-e{4} = tau - tau1;
-
-% test MiniPara // Internal model 解析解
-HH =cal_identification_matrix(Robot, motionPara,'External');
-[index, MDP] = get_mini_para_set_analytic(Robot,'External');
-e{5} = HH(:,index) * MDP - wrench;
-
-wrench1 = get_base_wrench_base_miniPara(Robot,motionPara);
-e{6} = wrench1 - wrench;
-
-% test MiniPara // External model 解析解 
-HH =cal_identification_matrix(Robot, motionPara,'Internal');
-[index, MDP] = get_mini_para_set_analytic(Robot,'Internal');
-e{7} = HH(:,index) * MDP - tau;
-
+Robot = get_cad_model_para(robotType);
+T1 = calToolWrench(Robot, motionPara, toolPara)
 
 
 for i = 1:1:length(e)
@@ -63,6 +97,7 @@ for i = 1:1:length(e)
         error(['cal error' num2str(i)])
     end
 end
+
 
 
 
