@@ -62,12 +62,31 @@ for i = 1:1:N_data - CyclePeriod * CN
     end
 end
 start_qc = index;
-
+% qs
+for i = 1:1:N_data - CyclePeriod * CN
+    q = qs(:,i : count_N + i - 1);
+    sum = zeros(6,CN);
+    for j = 1:1:P
+        ss = q(:, CN * (j-1) + 1 : CN * j);
+        sum = sum + ss;
+    end
+    q = sum/P;
+    e = norm(q - motionTraj.q);
+    if e < e1
+        e1 = e;
+        index = i;
+    end
+end
+start_qs = index;
+% 当前关节角和发送关节角的延迟
+period_delay = start_qc - start_qs
 figure(1)
 plot(qc(1, start_qc:start_qc + 2000 - 1))
 hold on
 plot(motionTraj.q(1,:))
-legend('qc','q')
+hold on
+plot(qs(1, start_qs:start_qs + 2000 - 1))
+legend('qc','q','qs')
 title('joint data after aligned ')
 pause(5)
 

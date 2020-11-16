@@ -7,5 +7,4 @@ global robotType
 robotType = 'I5';
 %%
 
-
-
+% Robot = get_cad_model_para(robotType);

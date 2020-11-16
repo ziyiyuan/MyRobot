@@ -24,11 +24,11 @@ estILS = 0; %采用增量最小二乘
 % postData.motionTraj.qdd = qdd_all';
 % postData.currentData = current_all';
 %% load data 
-% addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\data_20200908'))
-% datafile = 'jointStatusRecord_lizy1.txt';
-% motionParaCoeff = 'qq_lizy1.mat';
-% postData = post_sensor_data_process(Robot, Traj, datafile, motionParaCoeff, sampleRate);
-load('postData.mat')
+addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\data_20200908'))
+datafile = 'jointStatusRecord_lizy4.txt';
+motionParaCoeff = 'qq_lizy4.mat';
+postData = post_sensor_data_process(Robot, Traj, datafile, motionParaCoeff, sampleRate);
+% load('postData.mat')
 %% get CADPara
 if 0
 Robot.gravity = [1,2,3]'/norm([1,2,3]);
