@@ -19,6 +19,7 @@ COL = 1:1:size(regression,2);
 %     end
 % end
 % Col.u = COL(r_u_index);
+
 Col.u = 0;
 % COL(r_u_index) = [];
 % QR 分解找到线性无关的列

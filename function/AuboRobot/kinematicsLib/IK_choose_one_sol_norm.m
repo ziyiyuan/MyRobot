@@ -2,7 +2,7 @@ function qSol = IK_choose_one_sol_norm(q_sols, q_ref)
 % IK_choose_one_sol_norm  根据norm 值选出最接近上一个关节角的解
 % 输入参数：
 %   q_sols: 所有满足关节限制的解析解6*n；
-%   q_ref: 参考关节角；
+%   q_ref: 参考关节角.6*1；
 % 输出参数：
 %   q_sol：选出的解；
 % 调用说明：

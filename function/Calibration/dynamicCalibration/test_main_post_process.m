@@ -4,15 +4,15 @@ robotType = 'I5';
 Robot = get_cad_model_para(robotType);
 Traj = set_excitation_traj_feature();
 sampleRate = 200;
-identificationModel = 'External';
-% identificationModel = 'Internal';
+% identificationModel = 'External';
+identificationModel = 'Internal';
 addConstraints.M.cons = 1;
 addConstraints.M.offset = 1;
 addConstraints.M.reff = Robot.Para.DP.Mreff;
 
 estILS = 0; %采用增量最小二乘
 %% load data for internal identification
-% addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\date_internal'))
+addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\date_internal'))
 % NUM = 1;
 % q_all = load(['aubo_q_',num2str(NUM),'.txt']);
 % qd_all = load(['aubo_qd_',num2str(NUM),'.txt']);
@@ -24,11 +24,11 @@ estILS = 0; %采用增量最小二乘
 % postData.motionTraj.qdd = qdd_all';
 % postData.currentData = current_all';
 %% load data 
-addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\data_20200908'))
-datafile = 'jointStatusRecord_lizy4.txt';
-motionParaCoeff = 'qq_lizy4.mat';
+% addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\data_20200908'))
+% datafile = 'jointStatusRecord_lizy2.txt';
+% motionParaCoeff = 'qq_lizy2.mat';
 postData = post_sensor_data_process(Robot, Traj, datafile, motionParaCoeff, sampleRate);
-% load('postData.mat')
+load('postData.mat')
 %% get CADPara
 if 0
 Robot.gravity = [1,2,3]'/norm([1,2,3]);

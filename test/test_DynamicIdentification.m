@@ -2,9 +2,8 @@ clc; clear all; close all
 format short
 
 %% initialize
-global Robot 
 robotType = 'I5';
-ParaCAD(robotType)
+Robot = get_cad_model_para(robotType);
 %%
 e = [[]];
 % te
@@ -18,6 +17,20 @@ qdd = [1.033225, -1.088711, 1.970674, -1.859352, -1.050902, -1.853022]';
 motionPara.q = q;
 motionPara.qd = qd;
 motionPara.qdd = qdd;
+
+%%
+
+ HH = cal_ele_identification_matrix(Robot, motionPara,'Internal')
+ 
+ identifyPara.linkModel = 1;
+ identifyPara.roterInertiaModel = 1;
+ identifyPara.frictionModel = 1;
+ identifyPara.offsetModel = 1;
+ HE = cal_identification_matrix(Robot, motionPara, 'Internal', identifyPara)
+
+
+
+%%
 % test ID_NewtonEuler // 返回每个关节的力和力矩，线性牛顿欧拉和迭代牛顿欧拉；
 % linear model and ordinary model
 [tau1,ft] = ID_NewtonEuler(motionPara,'linear'); %

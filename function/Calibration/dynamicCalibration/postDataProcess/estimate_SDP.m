@@ -116,4 +116,5 @@ end
 q1_square = (norm(tau - W1 * para_OLS)^2)/(size(tau,1) - size(W1,2));
 e_beta = sqrt(q1_square .* diag(inv(W1'*W1)));
 D_beta = e_beta./abs(para_OLS);
+
 end
