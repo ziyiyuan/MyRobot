@@ -1,3 +1,4 @@
+%% test SDP out put form
 clc
 clear all
 robotType = 'I5';
@@ -18,6 +19,11 @@ estILS = 0; %采用增量最小二乘
 % postData = post_sensor_data_process(Robot, Traj, datafile, motionParaCoeff, sampleRate);
 % save postData postData
  load('postData.mat')
+
+ dlmwrite('qi.txt',postData.motionTraj.q','delimiter',',')
+ dlmwrite('qdi.txt',postData.motionTraj.qd','delimiter',',')
+ dlmwrite('qddi.txt',postData.motionTraj.qdd','delimiter',',')
+ dlmwrite('currentData.txt',postData.currentData','delimiter',',')
 %% get CADPara
 identifyPara.linkModel = 1;
 identifyPara.offsetModel = 1;
@@ -37,6 +43,7 @@ end
 %% ************************ estimation ***********************
 %% OLS
 [Col,beta] = get_mini_para_set_numerical(regression);
+[q1,r1] = qr(regression);
 if 1
     W1 = regression(:,Col.i);
     para_OLS = inv(W1'*W1) * W1'*tau;
@@ -80,6 +87,9 @@ if 1
         else
             eqn = eqn + eqn0;
         end
+        if(i == 82)
+            a = 1;
+        end
         se = 0;
         for m = 1:1:size(block,2)
             se = se + block(m);
@@ -87,7 +97,7 @@ if 1
             for j = si :1:se
                 for  k = j :1:se
                     if(abs(eqn(j,k)) > 1e-8)
-                        record = [record;i,m,j-si+1,k - si+1,eqn(j,k)];
+                        record = [record;i,m,j-si+1,k - si+1,eqn(j,k)];%% Fi, block_m  j,k元素  value
                     else
                         eqn(j,k) = 0;
                     end

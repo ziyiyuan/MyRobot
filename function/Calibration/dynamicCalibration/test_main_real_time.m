@@ -24,13 +24,13 @@ addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\
 % postData.motionTraj.qdd = qdd_all';
 % postData.currentData = current_all';
 %% load data 
-addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\data_20200908'))
-datafile = 'jointStatusRecord_lizy2.txt';
+addpath(genpath('C:\Users\Sherry\Desktop\MyRobot\dataLib\dynamicCalibrationData\data_20210114'))
+datafile = 'jointStatusRecord_lizy21.txt';
 motionParaCoeff = 'qq_lizy2.mat';
-postData = post_sensor_data_process(Robot, Traj, datafile, motionParaCoeff, sampleRate);
-load('postData.mat')
+postData = post_sensor_data_process_real_time(Robot, Traj, datafile, motionParaCoeff, sampleRate);
+% load('postData.mat')
 %% get CADPara
-if 1
+if 0
 % Robot.gravity = [1,2,3]'/norm([1,2,3]);
 identifyPara.linkModel = 1;
 identifyPara.offsetModel = 1;

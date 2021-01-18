@@ -1,3 +1,4 @@
+%% test SDP out put form
 clc
 clear all
 syms x1 x2

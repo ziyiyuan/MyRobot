@@ -1,34 +1,76 @@
-function postData = post_sensor_data_process(Robot, Traj, datafile, motionParaCoeff, sampleRate)
+function postData = post_sensor_data_process_real_time(Robot, Traj, datafile, motionParaCoeff, sampleRate)
 %
 % clc
 % clear all
 % robotType = 'I5';
 % Robot = get_cad_model_para(robotType);
 % Traj = set_excitation_traj_feature();
-% sampleRate = 200;
-% 
+% SampleRate = 200;
+%
 % %% load data
-% datafile = 'jointStatusRecord_lizy2.txt';
+% datafile = 'jointStatusRecord_lizy21.txt';
 % motionParaCoeff = 'qq_lizy2.mat';
-% 
 % postData = post_sensor_data_process(Robot, Traj, datafile, motionParaCoeff, sampleRate)
+
+
 %% initiall
 close all
 data_all = load(datafile);
 trajCoeff = load(motionParaCoeff);
-
+% load data
 qc = data_all(:,1:6)';% 当前关节角；
 qs = data_all(:,7:12)';% 发送的关节角；
-Ic = data_all(:,13:18)';% 当前电流；
-sensordata = data_all(:,19:24)';% 当前传感器读数；
-motionTraj = cal_motionPara_from_fourier_series(Robot, Traj, trajCoeff.qq, sampleRate);
+Ic = data_all(:,13:18)'.*1000;% 当前电流；
+if size(data_all,2) > 18
+    sensordata = data_all(:,19:24)';% 当前传感器读数；
+else
+    sensordata = zeros(6,size(data_all,1));
+end
 
+PN = Traj.TrajectoryPeriod * sampleRate;
 N_data = size(qc,2);
-CN = sampleRate * Traj.TrajectoryPeriod; % 采样频率 * 轨迹周期,单个周期内的采样点
 CyclePeriod = 40;
-if N_data < CyclePeriod * CN
+if N_data < CyclePeriod * PN
     CyclePeriod = 20;
 end
+% find period
+start = floor((size(qc,2) - CyclePeriod * PN)/2);
+max_index1 = [];
+max_value1 = [];
+period = [];
+for j = 1:1:Robot.DOF
+    index = j;
+    for i = 1:1:floor((size(qc,2) - start)/PN)
+        qi = qc(index,start + PN*(i-1): start + PN*i - 1)';
+        [A,B] = max(qi);
+        max_index = B + start + PN*(i-1) - 1;
+        if i == 1
+            period_point = max_index;
+        else
+            period_point = max_index - pb;
+            if period_point >= PN
+                period = [period; period_point];
+            end
+        end
+        pb = max_index;
+%         max_value1 = [max_value1,A];
+    end
+end
+% 剔除异常点
+a = mean(period);
+b = std(period);
+p = [];
+for i = 1:size(period,1)
+    x = period(i);
+    if abs(x - a) < 3*b
+        p = [p;x];
+    end
+end
+%平均
+ciclePoint = round(mean(p));
+TureSampleRate = ciclePoint/Traj.TrajectoryPeriod;
+motionTraj = cal_motionPara_from_fourier_series(Robot, Traj, trajCoeff.qq, TureSampleRate);
+CN = TureSampleRate * Traj.TrajectoryPeriod; % 采样频率 * 轨迹周期,单个周期内的采样点
 
 %% plot row data
 figure(1)
@@ -54,7 +96,7 @@ for i = 1:1:N_data - CyclePeriod * CN
         ss = q(:, CN * (j-1) + 1 : CN * j);
         sum = sum + ss;
     end
-    q = sum/P; 
+    q = sum/P;
     e = norm(q - motionTraj.q);
     if e < e1
         e1 = e;
@@ -81,11 +123,11 @@ start_qs = index;
 % 当前关节角和发送关节角的延迟
 period_delay = start_qc - start_qs
 figure(1)
-plot(qc(1, start_qc:start_qc + 2000 - 1))
+plot(qc(1, start_qc:start_qc + CN - 1))
 hold on
 plot(motionTraj.q(1,:))
 hold on
-plot(qs(1, start_qs:start_qs + 2000 - 1))
+plot(qs(1, start_qs:start_qs + CN - 1))
 legend('qc','q','qs')
 title('joint data after aligned ')
 pause(5)
